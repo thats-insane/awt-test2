@@ -117,16 +117,6 @@ func (a *appDependencies) getSingleQueryParam(queryParams url.Values, key string
 	return result
 }
 
-func (a *appDependencies) getMultipleQueryParam(queryParams url.Values, key string, defaultVal []string) []string {
-	result := queryParams.Get(key)
-
-	if result == "" {
-		return defaultVal
-	}
-
-	return strings.Split(result, ",")
-}
-
 func (a *appDependencies) getSingleIntParam(queryParams url.Values, key string, defaultVal int, v *validator.Validator) int {
 	result := queryParams.Get(key)
 	if result == "" {

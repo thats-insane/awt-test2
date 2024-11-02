@@ -178,7 +178,7 @@ func (p ProductModel) Delete(id int64) error {
 func (p ProductModel) Exists(productID int64) (bool, error) {
 	query := `
 	SELECT EXISTS
-	(SELECT 1 FROM products WHERE product_id = $1)
+	(SELECT 1 FROM products WHERE id = $1)
 	`
 	var exists bool
 
@@ -191,12 +191,12 @@ func (p ProductModel) Exists(productID int64) (bool, error) {
 }
 
 func ValidateProduct(v *validator.Validator, product *Product, handler int) {
-
 	switch handler {
 	case 1:
 		v.Check(product.Name != "", "name", "must be provided")
 		v.Check(product.Description != "", "description", "must be provided")
 		v.Check(product.Category != "", "category", "must be provided")
+		v.Check(product.AverageRating != 0, "average_rating", "must be provided")
 		v.Check(product.ImageURL != "", "image_url", "must be provided")
 
 		v.Check(len(product.Name) <= 100, "name", "must not be more than 100 byte long")
