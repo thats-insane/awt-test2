@@ -3,7 +3,7 @@ include .envrc
 .PHONY: run/api
 run/api:
 	@echo 'Running products/reviews API...'
-	@go run ./cmd/api -port=3000 -env=production -db-dsn=${PRODUCTSREVIEWS_DB_DSN}
+	@go run ./cmd/api -port=3000 -env=development -limiter-burst=5 -limiter-rps=2 -limiter-enabled=true -db-dsn=${PRODUCTSREVIEWS_DB_DSN}
 
 .PHONY: db/psql
 db/psql:

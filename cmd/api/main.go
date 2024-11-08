@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
@@ -21,6 +19,11 @@ type serverConfig struct {
 	env  string
 	db   struct {
 		dsn string
+	}
+	limiter struct {
+		rps     float64
+		burst   int
+		enabled bool
 	}
 }
 
@@ -56,6 +59,9 @@ func main() {
 	flag.IntVar(&settings.port, "port", 4000, "Server Port")
 	flag.StringVar(&settings.env, "env", "development", "Environment(Development|Staging|Production)")
 	flag.StringVar(&settings.db.dsn, "db-dsn", "postgres://productsreviews:productsreviews@localhost/productsreviews?sslmode=disable", "PostgreSQL DSN")
+	flag.Float64Var(&settings.limiter.rps, "limiter-rps", 2, "Rate Limiter maximum requests per second")
+	flag.IntVar(&settings.limiter.burst, "limiter-burst", 5, "Rate Limiter maximum burst")
+	flag.BoolVar(&settings.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -77,17 +83,10 @@ func main() {
 		reviewModel:  data.ReviewModel{DB: db},
 	}
 
-	apiServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", settings.port),
-		Handler:      appInstance.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	err = appInstance.serve()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
-	logger.Info("starting server", "address", apiServer.Addr, "env", settings.env)
-	err = apiServer.ListenAndServe()
-	logger.Error(err.Error())
-	os.Exit(1)
 }
